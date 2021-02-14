@@ -199,17 +199,14 @@ static void second_pass(int fd, struct Target *target)
 
 	if ((str = (char *)calloc(1000, 1)) == NULL)
 	{
-			fprintf(stderr, "Failed to allocate memory for string\n");
-			exit(EXIT_FAILURE);
+		fprintf(stderr, "Failed to allocate memory for string\n");
+		exit(EXIT_FAILURE);
 	}
-
-	memset(str, '\0', 1000);
 
 	while ((bytes = read(fd, buf, BUFSIZ)) > 0)
 	{
 		for (uint64_t i = 0; i < bytes; ++i)
-		{// we need to read only one line
-		
+		{// we need to read only one line, but are blasting through the file again		
 			if (curline == target->lineno)
 			{
 				if (buf[i] == '\n')
@@ -272,7 +269,7 @@ void read_file(const char *path)
 		{
 			if (buf[i] == '\n')
 			{
-				current_line[pos+1] = '\0';
+				current_line[pos] = '\0';
 				frequency_table = create_table(current_line);
 				entry = most_frequent(frequency_table);
 				entry_table->entries[entry_table->size++] = entry;
