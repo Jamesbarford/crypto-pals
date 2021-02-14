@@ -5,9 +5,8 @@
 #include <string.h>
 #include <errno.h>
 
-char *to_crack = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
-
-struct Frequency {
+struct Frequency
+{
 	uint32_t ascii_char;
 	uint32_t count;
 };
@@ -44,7 +43,7 @@ static uint8_t most_frequent(struct Frequency *frequency_table)
 	return current_char;
 }
 
-static struct Frequency *create_table()
+static struct Frequency *create_table(char *str)
 {
 	char pswd_c;
 	uint32_t cur = 0, j = 0;
@@ -62,7 +61,7 @@ static struct Frequency *create_table()
 		frequency_table[cur].ascii_char = cur;
 		frequency_table[cur].count = 0;
 
-		while ((pswd_c = to_crack[j++]) != '\0')
+		while ((pswd_c = str[j++]) != '\0')
 		{
 			if (pos == 1)
 			{
@@ -87,13 +86,13 @@ static struct Frequency *create_table()
 	return frequency_table;
 }
 
-static void print_decrypted(uint8_t byte)
+static void print_decrypted(char *str, uint8_t byte)
 {
 	char pswd_c;
 	uint8_t pos = 0, hex = 0;
 	uint32_t i = 0;
-
-	while ((pswd_c = to_crack[i++]) != '\0')
+	printf("0x%X\n", byte);
+	while ((pswd_c = str[i++]) != '\0')
 	{
 		if (pos == 1)
 		{
@@ -112,11 +111,17 @@ static void print_decrypted(uint8_t byte)
 	printf("\n");
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
-	struct Frequency *frequency_table = create_table();	
+	if (argc != 2)
+	{
+		fprintf(stderr, "Must provide hex string argument\n");
+		exit(EXIT_FAILURE);
+	}
+
+	struct Frequency *frequency_table = create_table(argv[1]);	
 	uint8_t most_common = most_frequent(frequency_table);
-	print_decrypted(most_common);
+	print_decrypted(argv[1], most_common);
 
 	free(frequency_table);
 }
