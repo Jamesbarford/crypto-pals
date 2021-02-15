@@ -8,7 +8,7 @@
 struct Frequency
 {
 	uint32_t ascii_char;
-	uint32_t count;
+	float letter_scoring;
 };
 
 static uint8_t char_to_hex(char c)
@@ -25,22 +25,57 @@ static uint8_t char_to_hex(char c)
 	return 0;
 }
 
-static uint8_t most_frequent(struct Frequency *frequency_table)
+// source http://en.wikipedia.org/Letter_Frequency
+static float get_letter_frequency(uint8_t c)
 {
-	uint32_t count = 0;
-	uint8_t current_char = 0;
+	switch(tolower(c))
+	{
+		case 'a': return 8.2;
+		case 'b': return 1.5;
+		case 'c': return 2.8;
+		case 'd': return 4.3;
+		case 'e': return 13.0;	
+		case 'f': return 2.2;
+		case 'g': return 2.0;
+		case 'h': return 6.1;
+		case 'i': return 7.0;
+		case 'j': return 0.15;
+		case 'k': return 0.77;
+		case 'l': return 4.0;
+		case 'm': return 2.4;
+		case 'n': return 6.7;
+		case 'o': return 7.5;
+		case 'p': return 1.9;
+		case 'q': return 0.095;
+		case 'r': return 6.0;
+		case 's': return 6.3;
+		case 't': return 9.1;
+		case 'u': return 2.8;
+		case 'v': return 0.98;
+		case 'w': return 2.4;
+		case 'x': return 0.15;
+		case 'y': return 2.0;
+		case 'z': return 0.074;
+		default:
+			return -1.0;
+	}
+}
 
+static uint8_t byte_used(struct Frequency *frequency_table)
+{
+	float score = 0.0;
+	uint32_t idx = 0;
 	for (uint32_t i = 0; i < 0xFF; ++i)
 	{
 		struct Frequency freq = frequency_table[i];
-		if (freq.count > count)
+		if (freq.letter_scoring > score)
 		{
-			count = freq.count;
-			current_char = freq.ascii_char;
+			idx = i;
+			score = freq.letter_scoring;
 		}
 	}
 
-	return current_char;
+	return freqquency_table[idx].ascii_char;
 }
 
 static struct Frequency *create_table(char *str)
@@ -59,16 +94,15 @@ static struct Frequency *create_table(char *str)
 	while (cur != 0xFF)
 	{
 		frequency_table[cur].ascii_char = cur;
-		frequency_table[cur].count = 0;
+		frequency_table[cur].letter_scoring = 0;
 
 		while ((pswd_c = str[j++]) != '\0')
 		{
 			if (pos == 1)
 			{
 				cur_hex |= char_to_hex(pswd_c);
-				unsigned char c = cur_hex ^ cur;
-				if (tolower(c) >= 97 && tolower(c) <= 122)
-					frequency_table[cur].count++;
+				uint8_t c = cur_hex ^ cur;
+				frequency_table[cur].letter_scoring += get_letter_frequency(c);
 
 				pos = 0;
 				cur_hex = 0;
@@ -83,6 +117,7 @@ static struct Frequency *create_table(char *str)
 		cur++;
 	}
 
+	print_s(frequency_table);
 	return frequency_table;
 }
 
@@ -120,7 +155,7 @@ int main(int argc, char **argv)
 	}
 
 	struct Frequency *frequency_table = create_table(argv[1]);	
-	uint8_t most_common = most_frequent(frequency_table);
+	uint8_t most_common = byte_used(frequency_table);
 	print_decrypted(argv[1], most_common);
 
 	free(frequency_table);
