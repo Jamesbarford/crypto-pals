@@ -139,8 +139,6 @@ static struct Frequency *create_table(char *str)
 static struct Frequency *most_frequent(struct Frequency *frequency_table)
 {
 	struct Frequency *entry;
-	float letter_scoring = 0.0;
-	uint32_t idx = 0;
 
 	if ((entry = malloc(sizeof(struct Frequency))) == NULL)
 	{
@@ -148,17 +146,16 @@ static struct Frequency *most_frequent(struct Frequency *frequency_table)
 		exit(EXIT_FAILURE);
 	}
 
+	entry->letter_scoring = 0.0;
+
 	for (uint32_t i = 0; i < 0xFF; ++i)
 	{
-		if (frequency_table[i].letter_scoring > letter_scoring)
+		if (frequency_table[i].letter_scoring > entry->letter_scoring)
 		{
-			idx = i;
-			letter_scoring = frequency_table[i].letter_scoring;
+			entry->letter_scoring = frequency_table[i].letter_scoring;
+			entry->ascii_char = frequency_table[i].ascii_char;
 		}
 	}
-
-	entry->letter_scoring = frequency_table[idx].letter_scoring;
-	entry->ascii_char = frequency_table[idx].ascii_char;
 
 	return entry;
 }
