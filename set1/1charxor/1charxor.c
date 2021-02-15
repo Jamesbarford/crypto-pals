@@ -75,7 +75,7 @@ static uint8_t byte_used(struct Frequency *frequency_table)
 		}
 	}
 
-	return freqquency_table[idx].ascii_char;
+	return frequency_table[idx].ascii_char;
 }
 
 static struct Frequency *create_table(char *str)
@@ -117,7 +117,6 @@ static struct Frequency *create_table(char *str)
 		cur++;
 	}
 
-	print_s(frequency_table);
 	return frequency_table;
 }
 
