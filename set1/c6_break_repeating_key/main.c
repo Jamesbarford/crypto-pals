@@ -159,6 +159,7 @@ unsigned char *repeating_key_xor(hexbuf_t const *hex_buf, unsigned char const *k
 
 	for (size_t i = 0; i < hex_buf->size - 1; ++i)
 		decoded[i] = (hex_buf->buf[i] ^ key[i % key_size]);
+
 	return decoded;
 }
 
