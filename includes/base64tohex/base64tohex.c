@@ -135,7 +135,7 @@ void free_hex_buf(hexbuf_t *hexbuf)
 	free(hexbuf);
 }
 
-static inline void decode(uint8_t *b64, uint8_t *hexbuf, size_t in_len, size_t output_len, size_t *current_count)
+static inline void decode(uint8_t *b64, uint8_t *outbuf, size_t in_len, size_t output_len, size_t *current_count)
 {
 	int hex = 0;
 	size_t i = 0;
@@ -156,9 +156,9 @@ static inline void decode(uint8_t *b64, uint8_t *hexbuf, size_t in_len, size_t o
 		uint8_t a_2 = (hex >> 8) & 0xFF;
 		uint8_t a_3 = hex & 0xFF;
 
-		if (*current_count < output_len) hexbuf[(*current_count)++] = a_1;
-		if (*current_count < output_len) hexbuf[(*current_count)++] = a_2;
-		if (*current_count < output_len) hexbuf[(*current_count)++] = a_3;
+		if (*current_count < output_len) outbuf[(*current_count)++] = a_1;
+		if (*current_count < output_len) outbuf[(*current_count)++] = a_2;
+		if (*current_count < output_len) outbuf[(*current_count)++] = a_3;
 
 		hex ^= hex;
 	}
