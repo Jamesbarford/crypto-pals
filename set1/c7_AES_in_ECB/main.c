@@ -8,6 +8,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "../../includes/base64tohex/base64tohex.h"
+#include "decrypt.h"
+
 int main(int argc, char **argv)
 {
 	if (argc == 1)
@@ -16,9 +19,13 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	// in the real world these would not be hard coded
+	unsigned char *cipherkey = (unsigned char *)"YELLOW SUBMARINE";
+	unsigned char *iv = (unsigned char *)"0123456789012345";	
 	int fd;
 	char *file_name = argv[1];
 	struct stat sb;
+	hexbuf_t *hex_buf = decodeB64_from_file(file_name);
 
 	if ((fd = open(file_name, O_RDONLY)) == -1)
 	{
@@ -29,20 +36,16 @@ int main(int argc, char **argv)
 	if (fstat(fd, &sb) == -1)
 	{
 		fprintf(stderr, "Failed to stat: '%s': %s\n", file_name, strerror(errno));
-		goto failed;
+		exit(EXIT_FAILURE);	
 	}
 
-	char *full_file =  mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	unsigned char buf[sb.st_size];
+	
+	decrypt(hex_buf->buf, hex_buf->size, cipherkey, iv, buf);
 
-	if (full_file == NULL)
-	{
-		fprintf(stderr, "Failed to mmap: '%s': %s\n", file_name, strerror(errno));
-		goto failed;
-	}
-	printf("%s", full_file);
-	(void)munmap(full_file, sb.st_size);
+	buf[hex_buf->size] = '\0';
+	printf("%s", buf);
 
-failed:
-	exit(EXIT_FAILURE);
 	(void)close(fd);
+	(void)free(hex_buf);
 }

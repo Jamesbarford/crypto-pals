@@ -1,3 +1,8 @@
+/**
+ * This is taken directly from the documentation:
+ *
+ * https://wiki.openssl.org/index.php/EVP_Symmetric_Encryption_and_Decryption
+ * */
 #include <openssl/conf.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>

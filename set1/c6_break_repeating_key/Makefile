@@ -1,23 +1,27 @@
-OUT_DIR	= output
+OBJ_DIR	= ./build
 SRC = ./
-LINK_TARGET = break_repeating_key.out
-SRC_FILES = main.c ./base64tohex/base64tohex.c
-OBJS = $(patsubst $(SRC)/%.c, $(OUT_DIR)/%.o, $(SRC_FILES))
-CC_FLAGS = -std=gnu17 -Wall -Werror -Wextra -Wpedantic -Wno-shadow -g -O0
-CC = gcc
+INCLUDES = ../../includes
+TARGET = decrypt.out
+CFLAGS = -Wall -Wextra -Wpedantic -Wno-shadow -O0 -g
+CC = cc
 
-all: $(LINK_TARGET)
-	@echo "compilation success ✅"
+${OBJ_DIR}/%.o: ${SRC}/%.c
+	${CC} -c ${CFLAGS} -o $@ $<
 
-$(LINK_TARGET): $(OBJS)
-	$(CC) $(CC_FLAGS) -o $@ $^
+${OBJ_DIR}/%.o: ${INCLUDES}/base64tohex/%.c
+	${CC} -c ${CFLAGS} -o $@ $<
 
-$(OUT_DIR)/%.o: ./%.c
-	$(CC) $(CC_FLAGS) -o $@ -c $<
-
-$(OUT_DIR)/%.o: $(SRC)/%.c
-	$(CC) $(CC_FLAGS) -o $@ -c $<
+all: ${TARGET}
 
 clean:
-	rm -rf $(LINK_TARGET)
-	@echo "clean done ✨"
+	rm ${OBJ_DIR}/*.o
+	rm ${TARGET}
+
+OBJLIST = ${OBJ_DIR}/main.o \
+          ${OBJ_DIR}/base64tohex.o
+
+${TARGET}: ${OBJLIST}
+	${CC} -o ${TARGET} ${OBJLIST}
+
+${OBJ_DIR}/main.o: ${SRC}/main.c ${INCLUDES}/base64tohex/base64tohex.h
+${OBJ_DIR}/base64tohex.o: ${INCLUDES}/base64tohex/base64tohex.c ${INCLUDES}/base64tohex/base64tohex.h

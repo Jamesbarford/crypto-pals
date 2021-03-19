@@ -8,7 +8,7 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
-#include "./base64tohex/base64tohex.h"
+#include "../../includes/base64tohex/base64tohex.h"
 
 // source https://en.wikipedia.org/wiki/Letter_frequency
 static inline float get_letter_frequency(unsigned char c)
