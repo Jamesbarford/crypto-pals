@@ -12,13 +12,13 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	// in the real world these would not be hard coded
 	char *file_name = argv[1];
 	hexbuf_t *hex_buf = decodeB64_from_file(file_name);
+	unsigned char buf[hex_buf->size];
 
+	// in the real world these would not be hard coded
 	unsigned char *cipherkey = (unsigned char *)"YELLOW SUBMARINE";
 	unsigned char *iv = (unsigned char *)"0123456789012345";	
-	unsigned char buf[hex_buf->size];
 	
 	decrypt(hex_buf->buf, hex_buf->size, cipherkey, iv, buf);
 
