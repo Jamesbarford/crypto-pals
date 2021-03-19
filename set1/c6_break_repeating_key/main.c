@@ -163,9 +163,14 @@ unsigned char *repeating_key_xor(hexbuf_t const *hex_buf, unsigned char const *k
 	return decoded;
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
-	char *file_name = "./file_no_newlines.txt";
+	if (argc == 1)
+	{
+		printf("Usage: ./decrypt.out <file_name>");
+		exit(EXIT_FAILURE);
+	}
+	char *file_name = argv[1];
 	hexbuf_t *hex_buf = decodeB64_from_file(file_name);
 	size_t key_size = get_key_size(hex_buf); 
 	unsigned char *key = get_key(key_size, hex_buf);
@@ -174,7 +179,7 @@ int main(void)
 	printf("Key size: %ld\t Key: %s\n", key_size, key);
 	printf("%s\n", decoded);
 
-	free(hex_buf);
-	free(key);
-	free(decoded);
+	free_hex_buf(hex_buf);
+	(void)free(key);
+	(void)free(decoded);
 }

@@ -1,8 +1,4 @@
 /**
- * This CANNOT yet handle line breaks!!
- *
- *
- *
  * Simple base64 to hex converter
  *
  * Example text is from: https://en.wikipedia.org/wiki/Base64
@@ -27,9 +23,23 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <ctype.h>
+
 #include "base64tohex.h"
+
+static inline size_t get_line_length(uint8_t *text)
+{
+	size_t i = 0;
+	int16_t c;
+
+	while (( c = text[i++]) != '\n')
+		if (c == EOF)
+			return i;
+
+	return i - 1;
+}
 
 // hex -> 0x4D 0x61 0x6E
 static inline int8_t base64_to_int(char c)
@@ -105,23 +115,33 @@ static inline int8_t base64_to_int(char c)
 	}
 }
 
-hexbuf_t *decodeB64(uint8_t *b64, size_t input_len)
+hexbuf_t *alloc_hexbuf(size_t input_len)
 {
-	hexbuf_t *hex_block = NULL;
-	uint64_t i = 0, j = 0;
-	int32_t hex = 0;
-	size_t output_len =  input_len / 4 * 3;
+	hexbuf_t *hexbuf = NULL;
 
-	if ((hex_block = malloc(output_len + sizeof(size_t))) == NULL)
+	size_t output_len = (input_len * 3 / 4);
+	if ((hexbuf = malloc(output_len + sizeof(size_t))) == NULL)
 	{
 		fprintf(stderr, "Failed to allocate memory for decoded output: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
-	hex_block->size = output_len;
+	hexbuf->size = output_len;
+	return hexbuf;
+}
 
-	while (i < input_len)
-	{
+void free_hex_buf(hexbuf_t *hexbuf)
+{
+	free(hexbuf);
+}
+
+static inline void decode(uint8_t *b64, uint8_t *hexbuf, size_t in_len, size_t output_len, size_t *current_count)
+{
+	int hex = 0;
+	size_t i = 0;
+
+	while (i < in_len)
+	{	
 		uint8_t c_1 = b64[i++];
 		uint8_t c_2 = b64[i++];
 		uint8_t c_3 = b64[i++];
@@ -131,19 +151,76 @@ hexbuf_t *decodeB64(uint8_t *b64, size_t input_len)
 		hex |= base64_to_int(c_2) << 12;
 		hex |= base64_to_int(c_3) << 6;	
 		hex |= base64_to_int(c_4);
-	
+
 		uint8_t a_1 = (hex >> 16) & 0xFF;
 		uint8_t a_2 = (hex >> 8) & 0xFF;
 		uint8_t a_3 = hex & 0xFF;
 
-		if (j < output_len) hex_block->buf[j++] = a_1;
-		if (j < output_len) hex_block->buf[j++] = a_2;
-		if (j < output_len) hex_block->buf[j++] = a_3;
+		if (*current_count < output_len) hexbuf[(*current_count)++] = a_1;
+		if (*current_count < output_len) hexbuf[(*current_count)++] = a_2;
+		if (*current_count < output_len) hexbuf[(*current_count)++] = a_3;
 
 		hex ^= hex;
 	}
 
-	return hex_block;
+}
+
+/* This can handle bpth line breaks and no line breaks, if no line breaks it will do a pass over the whole file */
+hexbuf_t *decodeB64_linebreaks(uint8_t *b64, size_t input_len)
+{
+	size_t line_len = get_line_length(b64);
+	hexbuf_t *hexbuf = alloc_hexbuf(input_len);
+	
+	uint8_t tmp[line_len];
+	memset(tmp, '\0', line_len);
+	size_t i = 0;
+	size_t j = 0;
+	size_t cur = 0;
+	size_t line_count = 0;
+
+	while (i < input_len + line_len)
+	{
+		if (cur != 0 && cur % line_len  == 0) 
+		{
+			line_count++;
+			
+			decode(tmp, hexbuf->buf, line_len, hexbuf->size, &j);
+			memset(tmp, '\0', line_len);
+
+			cur ^= cur;
+			i++;
+		}
+		else
+		{
+			char c = b64[i++];
+
+			if (c == '=')
+			{
+				cur++;
+				hexbuf->size--;
+			}
+			else
+				tmp[cur++] = c;
+		}
+	}
+
+	if (line_count > 1)
+		hexbuf->size -= line_count / 4 * 3;
+	// TODO: re-alloc to correct size;
+	hexbuf->buf[i] = '\0';
+
+	return hexbuf;	
+}
+
+/* This does not handle line breaks, feels more robust */
+hexbuf_t *decodeB64(uint8_t *b64, size_t input_len)
+{
+	size_t j = 0;
+	hexbuf_t *hexbuf = alloc_hexbuf(input_len);
+
+	decode(b64, hexbuf->buf, input_len, hexbuf->size, &j);
+
+	return hexbuf;
 }
 
 /* the buffer can have nulls in it, making debugging hard */
@@ -172,7 +249,7 @@ hexbuf_t *decodeB64_from_file(char *file_name)
 		exit(EXIT_FAILURE);
 	}
 
-	hex_block = decodeB64(mem_file, sb.st_size);
+	hex_block = decodeB64_linebreaks(mem_file, sb.st_size);
 	(void)munmap(mem_file, sb.st_size);
 	(void)close(fd);
 
