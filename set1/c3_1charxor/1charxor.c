@@ -5,14 +5,12 @@
 #include <string.h>
 #include <errno.h>
 
-struct Frequency
-{
+struct Frequency {
 	uint32_t ascii_char;
 	float letter_scoring;
 };
 
-static uint8_t char_to_hex(char c)
-{
+static uint8_t char_to_hex(char c) {
 	char lower_char = tolower(c);
 	if (lower_char >= 48 && lower_char <= 57)
 		return lower_char - 48;
@@ -26,10 +24,8 @@ static uint8_t char_to_hex(char c)
 }
 
 // source http://en.wikipedia.org/Letter_Frequency
-static float get_letter_frequency(uint8_t c)
-{
-	switch(tolower(c))
-	{
+static float get_letter_frequency(uint8_t c) {
+	switch(tolower(c)) {
 		case 'a': return 8.2;
 		case 'b': return 1.5;
 		case 'c': return 2.8;
@@ -57,19 +53,17 @@ static float get_letter_frequency(uint8_t c)
 		case 'y': return 2.0;
 		case 'z': return 0.074;
 		default:
-			return -1.0;
+			return 0.0;
 	}
 }
 
-static uint8_t byte_used(struct Frequency *frequency_table)
-{
+static uint8_t byte_used(struct Frequency *frequency_table) {
 	float score = 0.0;
 	uint32_t idx = 0;
-	for (uint32_t i = 0; i < 0xFF; ++i)
-	{
+
+	for (uint32_t i = 0; i < 0xFF; ++i) {
 		struct Frequency freq = frequency_table[i];
-		if (freq.letter_scoring > score)
-		{
+		if (freq.letter_scoring > score) {
 			idx = i;
 			score = freq.letter_scoring;
 		}
@@ -78,37 +72,30 @@ static uint8_t byte_used(struct Frequency *frequency_table)
 	return frequency_table[idx].ascii_char;
 }
 
-static struct Frequency *create_table(char *str)
-{
+static struct Frequency *create_table(char *str) {
 	char pswd_c;
 	uint32_t cur = 0, j = 0;
 	uint8_t cur_hex = 0, pos = 0;
 	struct Frequency *frequency_table;
 
-	if ((frequency_table = malloc(sizeof(struct Frequency) * 0xFF)) == NULL)
-	{
+	if ((frequency_table = malloc(sizeof(struct Frequency) * 0xFF)) == NULL) {
 		fprintf(stderr, "Failed to allocate memory for frequency table: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
-	while (cur != 0xFF)
-	{
+	while (cur != 0xFF) {
 		frequency_table[cur].ascii_char = cur;
 		frequency_table[cur].letter_scoring = 0;
 
-		while ((pswd_c = str[j++]) != '\0')
-		{
-			if (pos == 1)
-			{
+		while ((pswd_c = str[j++]) != '\0') {
+			if (pos == 1) {
 				cur_hex |= char_to_hex(pswd_c);
 				uint8_t c = cur_hex ^ cur;
 				frequency_table[cur].letter_scoring += get_letter_frequency(c);
 
 				pos = 0;
 				cur_hex = 0;
-			}
-			else
-			{
+			} else {
 				cur_hex |= char_to_hex(pswd_c) << 4;
 				pos++;
 			}
@@ -120,23 +107,19 @@ static struct Frequency *create_table(char *str)
 	return frequency_table;
 }
 
-static void print_decrypted(char *str, uint8_t byte)
-{
+static void print_decrypted(char *str, uint8_t byte) {
 	char pswd_c;
 	uint8_t pos = 0, hex = 0;
 	uint32_t i = 0;
 	printf("0x%X\n", byte);
-	while ((pswd_c = str[i++]) != '\0')
-	{
-		if (pos == 1)
-		{
+
+	while ((pswd_c = str[i++]) != '\0') {
+		if (pos == 1) {
 			hex |= char_to_hex(pswd_c);
 			printf("%c", hex ^ byte);
 			hex = 0;
 			pos = 0;
-		}
-		else
-		{
+		} else {
 			hex |= char_to_hex(pswd_c) << 4;
 			pos++;
 		}
@@ -145,10 +128,8 @@ static void print_decrypted(char *str, uint8_t byte)
 	printf("\n");
 }
 
-int main(int argc, char **argv)
-{
-	if (argc != 2)
-	{
+int main(int argc, char **argv) {
+	if (argc != 2) {
 		fprintf(stderr, "Must provide hex string argument\n");
 		exit(EXIT_FAILURE);
 	}

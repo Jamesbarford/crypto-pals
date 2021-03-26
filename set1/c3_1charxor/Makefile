@@ -1,9 +1,6 @@
 LINK_TARGET = 1charxor.out
-CC_FLAGS = -std=gnu17 -Wall -Werror -Wextra -Wpedantic -Wno-shadow -g -O0
-CC = gcc
-
-all: $(LINK_TARGET)
-	@echo "compilation success ✅"
+CC_FLAGS = -Wall -Werror -Wextra -Wpedantic -Wno-shadow -g -O0
+CC = cc
 
 $(LINK_TARGET): 1charxor.c
 	$(CC) $(CC_FLAGS) -o $@ $^
