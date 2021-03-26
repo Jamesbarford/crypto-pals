@@ -59,7 +59,7 @@ static unsigned char get_likely_byte(Frequency *freqencies) {
 	unsigned char likely_char = 0;
 	float score = 0.0;
 
-	for (int i = 0; i < 256; ++i) {
+	for (unsigned char i = 0; i < ASCII_LIMIT; ++i) {
 		Frequency freq = freqencies[i];
 		if (freq.letter_scoring > score) {
 			score = freq.letter_scoring;
