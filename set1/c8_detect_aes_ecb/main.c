@@ -7,6 +7,15 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+typedef struct Candidate {
+	unsigned int repetitions;
+	unsigned int line_no;
+} Candidate;
+
+static void detect_ecb(Candidate *c, char *text) {
+
+}
+
 int main(int argc, char **argv) {
 	if (argc != 2) {
 		fprintf(stderr, "Usage: %s <file>\n", argv[0]);
