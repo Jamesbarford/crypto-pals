@@ -24,7 +24,6 @@ void read_exec(char *file_name, Readbuf read_buf) {
 
 void read_file(char *file_name, mmapd_file_t *mmapd_file) {
 	int fd;
-	char *text;
 	struct stat sb;
 
 	if ((fd = open(file_name, O_RDONLY)) == -1) {
@@ -38,7 +37,9 @@ void read_file(char *file_name, mmapd_file_t *mmapd_file) {
 		exit(EXIT_FAILURE);
 	}
 
-	if ((mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) == NULL) {
+	char *text = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+
+	if (text == MAP_FAILED) {
 		fprintf(stderr, "Failed to mmap %s: %s\n", file_name, strerror(errno));
 		(void)close(fd);
 		exit(EXIT_FAILURE);
