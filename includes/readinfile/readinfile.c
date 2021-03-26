@@ -1,5 +1,13 @@
 #include "readinfile.h"
 
+unsigned int get_line_len(mmapd_file_t *mmapd_file) {
+	unsigned int len = 0;
+
+	for (char c; (c = mmapd_file->text[len]) != '\n'; len++);			
+
+	return len;	
+}
+
 void read_stdin(Readbuf read_buf) {
 	int bytes;
 	char buf[BUFSIZ];

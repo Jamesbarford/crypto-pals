@@ -19,6 +19,7 @@ typedef struct mmapd_file_t {
 
 typedef void (*Readbuf)(char *buf);
 
+unsigned int get_line_len(mmapd_file_t *mmapd_file);
 void read_stdin(Readbuf read_buf);
 void read_exec(char *file_name, Readbuf read_buf);
 void read_file(char *file_name, mmapd_file_t *mmapd_file);

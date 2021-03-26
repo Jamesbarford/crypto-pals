@@ -1,19 +1,38 @@
 #include <errno.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <unistd.h>
 
-typedef struct Candidate {
-	unsigned int repetitions;
-	unsigned int line_no;
-} Candidate;
+#include "../../includes/readinfile/readinfile.h"
 
-static void detect_ecb(Candidate *c, char *text) {
+static int detect_ecb_mode(mmapd_file_t *mmapd_file, unsigned int key_length) {
+	unsigned int line_len = get_line_len(mmapd_file);
+	unsigned int blocks_size = line_len / key_length;
+	char cur_line[line_len];
+	char block1[key_length+1];
+	char block2[key_length+1];
+	memset(cur_line, '\0', line_len);
 
+	for (unsigned int lineno = 0; lineno < mmapd_file->size / line_len; ++lineno) {
+		memcpy(cur_line, &mmapd_file->text[(lineno * line_len) + lineno], line_len);
+		cur_line[line_len+1] = '\0';
+
+		for (unsigned int j = 0; j < blocks_size; ++j) {
+			memcpy(block1, &cur_line[j * key_length], key_length);
+			block1[key_length+1] = '\0';
+
+			for (unsigned int k = j + 1; k < blocks_size; ++k) {
+				memcpy(block2, &cur_line[k * key_length], key_length);
+				block2[key_length+1] = '\0';
+
+				if (strcmp(block1, block2) == 0) {
+					return lineno + 1; // lines in a file are not zero based
+				}
+			}
+		}	
+	}
+
+	return -1;
 }
 
 int main(int argc, char **argv) {
@@ -22,29 +41,10 @@ int main(int argc, char **argv) {
 		exit(EXIT_FAILURE);
 	}
 
-	int fd;
-	char *file_name = argv[1];
-	struct stat sb;
+	mmapd_file_t mmapd_file;
 
-	if ((fd = open(file_name, O_RDONLY)) == -1) {
-		fprintf(stderr, "Failed to open file: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-
-	if (fstat(fd, &sb) == -1) {
-		fprintf(stderr, "Failed to stat %s: %s\n", file_name, strerror(errno));
-		(void)close(fd);
-		exit(EXIT_FAILURE);
-	}
-
-	char *text = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
- 	
-	if (text == NULL) {
-		fprintf(stderr, "Failed to mmap file %s: %s\n", file_name, strerror(errno));
-		(void)close(fd);
-		exit(EXIT_FAILURE);	
-	}
-
-	(void)munmap(text, sb.st_size);
-	(void)close(fd);
+	read_file(argv[1], &mmapd_file);
+	int line = detect_ecb_mode(&mmapd_file, 16);
+	printf("line: %d\n", line);
+	free_file(&mmapd_file);
 }
