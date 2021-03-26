@@ -10,7 +10,7 @@ typedef struct Frequency {
 	float letter_scoring;
 } Frequency;
 
-static inline unsigned char_to_hex(char c) {
+static inline unsigned char char_to_hex(char c) {
 	char lower_char = tolower(c);
 	if (lower_char >= 48 && lower_char <= 57)
 		return lower_char - 48;
@@ -71,26 +71,24 @@ static unsigned char get_likely_byte(Frequency *freqencies) {
 }
 
 static void populate_frequencies(char *str, int len, Frequency *freqencies) {
-	for (int i = 0; i < ASCII_LIMIT; ++i)
-		freqencies[i].letter_scoring = 0;
+	int j = 0;
 
-	for (unsigned char c = 0; c < ASCII_LIMIT; ++c) {
-		int j = 0;
+	while (j < len) {
 		int byte = 0;
+		byte |= char_to_hex(str[++j]);
+		byte |= char_to_hex(str[j-1]) << 4;
+		freqencies[byte].letter_scoring += get_letter_frequency(byte);
 
-		while (j < len) {
-			byte |= char_to_hex(str[++j]);
-			byte |= char_to_hex(str[j-1]) << 4;
-			freqencies[byte].letter_scoring += get_letter_frequency(byte);
- 
-			j++;
-			byte ^= byte;	
-		}
+		j++;
 	}
 }
 
 static unsigned char get_xor_byte(char *str, int len) {
 	Frequency freqencies[ASCII_LIMIT];
+
+	for (int i = 0; i < ASCII_LIMIT; ++i)
+		freqencies[i].letter_scoring = 0;
+
 	populate_frequencies(str, len, freqencies);
 	
 	return get_likely_byte(freqencies);
