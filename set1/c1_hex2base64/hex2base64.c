@@ -5,61 +5,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include "hex2base64.h"
 
-void to_base64(char *hexstr);
-static uint8_t char_to_hex(char c);
-static void print_base64(uint32_t hex, uint8_t padding);
 static const char *base64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-int main(int argc, char **argv)
-{
-	if (argc != 2)
-	{
-		fprintf(stderr, "Argument needed for string to decode \n");
-		exit(EXIT_FAILURE);
-	}
-	to_base64(argv[1]);
-	printf("\n");
-	exit(EXIT_SUCCESS);
-}
-
-void to_base64(char *hexstr)
-{
-	char c;
-	uint64_t len = 0;
-	uint32_t hex = 0;
-	int8_t window = 0;
-
-	while ((c = hexstr[len++]) != '\0')
-	{
-		if (iscntrl(c))
-			break;
-		window++;
-		hex |= char_to_hex(c) << (0x18 - (window << 2));
-		if (window == 6)
-		{
-			print_base64(hex, 0);
-			hex = 0;
-			window = 0;
-		}
-	}
-
-	if (hex != 0)
-		print_base64(hex, window % 3);
-}
-
-static void print_base64(uint32_t hex, uint8_t padding)
-{
-	for (uint8_t i = padding; i < 4; ++i)
-		printf("%c", base64chars[(hex >> (6 * (3 + padding - i))) & 0x3F]);
-
-	if (padding != 0)
-		for (uint8_t i = 0; i < padding; ++i)
-			printf("=");
-}
-
-static uint8_t char_to_hex(char c)
-{
+static uint8_t char_to_hex(char c) {
 	char lower_char = tolower(c);
 	if (lower_char >= 48 && lower_char <= 57)
 		return lower_char - 48;
@@ -71,3 +21,36 @@ static uint8_t char_to_hex(char c)
 	exit(EXIT_FAILURE);
 	return 0;
 }
+
+static void print_base64(uint32_t hex, uint8_t padding) {
+	for (uint8_t i = padding; i < 4; ++i)
+		printf("%c", base64chars[(hex >> (6 * (3 + padding - i))) & 0x3F]);
+
+	if (padding != 0)
+		for (uint8_t i = 0; i < padding; ++i)
+			printf("=");
+}
+
+void to_base64(char *hexstr) {
+	char c;
+	uint64_t len = 0;
+	uint32_t hex = 0;
+	int8_t window = 0;
+
+	while ((c = hexstr[len++]) != '\0') {
+		if (iscntrl(c))
+			break;
+		
+		window++;
+		hex |= char_to_hex(c) << (0x18 - (window << 2));
+		if (window == 6) {
+			print_base64(hex, 0);
+			hex = 0;
+			window = 0;
+		}
+	}
+
+	if (hex != 0)
+		print_base64(hex, window % 3);
+}
+
