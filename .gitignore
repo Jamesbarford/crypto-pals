@@ -1,4 +1,5 @@
 *.out
 *.txt
+*.drawio
 .vscode
 build
