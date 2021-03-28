@@ -29,8 +29,7 @@
 
 #include "base64tohex.h"
 
-static inline size_t get_line_length(uint8_t *text)
-{
+static inline size_t get_line_length(uint8_t *text) {
 	size_t i = 0;
 	int16_t c;
 
@@ -42,10 +41,8 @@ static inline size_t get_line_length(uint8_t *text)
 }
 
 // hex -> 0x4D 0x61 0x6E
-static inline int8_t base64_to_int(char c)
-{
-	switch(c)
-	{
+static inline int8_t base64_to_int(char c) {
+	switch(c) {
 		case 'A': return 0;
 		case 'B': return 1;
 		case 'C': return 2;
@@ -115,13 +112,11 @@ static inline int8_t base64_to_int(char c)
 	}
 }
 
-hexbuf_t *alloc_hexbuf(size_t input_len)
-{
+hexbuf_t *alloc_hexbuf(size_t input_len) {
 	hexbuf_t *hexbuf = NULL;
 
 	size_t output_len = (input_len * 3 / 4);
-	if ((hexbuf = malloc(output_len + sizeof(size_t))) == NULL)
-	{
+	if ((hexbuf = malloc(output_len + sizeof(size_t))) == NULL) {
 		fprintf(stderr, "Failed to allocate memory for decoded output: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
@@ -130,18 +125,15 @@ hexbuf_t *alloc_hexbuf(size_t input_len)
 	return hexbuf;
 }
 
-void free_hex_buf(hexbuf_t *hexbuf)
-{
+void free_hex_buf(hexbuf_t *hexbuf) {
 	free(hexbuf);
 }
 
-static inline void decode(uint8_t *b64, uint8_t *outbuf, size_t in_len, size_t output_len, size_t *current_count)
-{
+static inline void decode(uint8_t *b64, uint8_t *outbuf, size_t in_len, size_t output_len, size_t *current_count) {
 	int hex = 0;
 	size_t i = 0;
 
-	while (i < in_len)
-	{	
+	while (i < in_len) {	
 		uint8_t c_1 = b64[i++];
 		uint8_t c_2 = b64[i++];
 		uint8_t c_3 = b64[i++];
@@ -166,8 +158,7 @@ static inline void decode(uint8_t *b64, uint8_t *outbuf, size_t in_len, size_t o
 }
 
 /* This can handle bpth line breaks and no line breaks, if no line breaks it will do a pass over the whole file */
-hexbuf_t *decodeB64_linebreaks(uint8_t *b64, size_t input_len)
-{
+hexbuf_t *decodeB64_linebreaks(uint8_t *b64, size_t input_len) {
 	size_t line_len = get_line_length(b64);
 	hexbuf_t *hexbuf = alloc_hexbuf(input_len);
 	
@@ -178,10 +169,8 @@ hexbuf_t *decodeB64_linebreaks(uint8_t *b64, size_t input_len)
 	size_t cur = 0;
 	size_t line_count = 0;
 
-	while (i < input_len + line_len)
-	{
-		if (cur != 0 && cur % line_len  == 0) 
-		{
+	while (i < input_len + line_len) {
+		if (cur != 0 && cur % line_len  == 0) {
 			line_count++;
 			
 			decode(tmp, hexbuf->buf, line_len, hexbuf->size, &j);
@@ -189,18 +178,15 @@ hexbuf_t *decodeB64_linebreaks(uint8_t *b64, size_t input_len)
 
 			cur ^= cur;
 			i++;
-		}
-		else
-		{
+		} else {
 			char c = b64[i++];
 
-			if (c == '=')
-			{
+			if (c == '=') {
 				cur++;
 				hexbuf->size--;
+			} else {
+				 tmp[cur++] = c;
 			}
-			else
-				tmp[cur++] = c;
 		}
 	}
 
@@ -213,8 +199,7 @@ hexbuf_t *decodeB64_linebreaks(uint8_t *b64, size_t input_len)
 }
 
 /* This does not handle line breaks, feels more robust */
-hexbuf_t *decodeB64(uint8_t *b64, size_t input_len)
-{
+hexbuf_t *decodeB64(uint8_t *b64, size_t input_len) {
 	size_t j = 0;
 	hexbuf_t *hexbuf = alloc_hexbuf(input_len);
 
@@ -224,27 +209,23 @@ hexbuf_t *decodeB64(uint8_t *b64, size_t input_len)
 }
 
 /* the buffer can have nulls in it, making debugging hard */
-hexbuf_t *decodeB64_from_file(char *file_name)
-{
+hexbuf_t *decodeB64_from_file(char *file_name) {
 	int fd;
 	uint8_t *mem_file;
 	hexbuf_t *hex_block;
 	struct stat sb;
 
-	if ((fd = open(file_name, O_RDONLY)) == -1)
-	{
+	if ((fd = open(file_name, O_RDONLY)) == -1) {
 		fprintf(stderr, "Failed to open file: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
-	if (fstat(fd, &sb) == -1)
-	{
+	if (fstat(fd, &sb) == -1) {
 		fprintf(stderr, "Failed to stat file: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
-	if ((mem_file = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) == NULL)
-	{
+	if ((mem_file = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) == NULL) {
 		fprintf(stderr, "Failed to mmap file: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
@@ -254,4 +235,14 @@ hexbuf_t *decodeB64_from_file(char *file_name)
 	(void)close(fd);
 
 	return hex_block;
+}
+
+// somewhat traditional, could print by bytes
+void print_hexbuf(hexbuf_t *hexbuf) {
+	for (size_t i = 0; i < hexbuf->size / 30; ++i) {
+		for (int j = 0; j < 30; ++j) {
+			printf("%02x", hexbuf->buf[j + i * 30]);
+		}
+		printf("\n");
+	}
 }
