@@ -194,6 +194,7 @@ hexbuf_t *decodeB64_linebreaks(uint8_t *b64, size_t input_len) {
 		hexbuf->size -= line_count / 4 * 3;
 	// TODO: re-alloc to correct size;
 	hexbuf->buf[i] = '\0';
+	hexbuf->size = strlen((char *)hexbuf->buf);
 
 	return hexbuf;	
 }
@@ -204,6 +205,7 @@ hexbuf_t *decodeB64(uint8_t *b64, size_t input_len) {
 	hexbuf_t *hexbuf = alloc_hexbuf(input_len);
 
 	decode(b64, hexbuf->buf, input_len, hexbuf->size, &j);
+	hexbuf->size = strlen((char *)hexbuf->buf);
 
 	return hexbuf;
 }
