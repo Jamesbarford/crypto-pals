@@ -237,12 +237,20 @@ hexbuf_t *decodeB64_from_file(char *file_name) {
 	return hex_block;
 }
 
+void print_hexbuf_oneline(hexbuf_t *hexbuf) {
+	for (size_t i = 0; i < hexbuf->size; ++i) {
+		printf("%02x", hexbuf->buf[i]);
+	}
+	printf("\n");
+}
+
 // somewhat traditional, could print by bytes
 void print_hexbuf(hexbuf_t *hexbuf) {
-	for (size_t i = 0; i < hexbuf->size / 30; ++i) {
-		for (int j = 0; j < 30; ++j) {
-			printf("%02x", hexbuf->buf[j + i * 30]);
-		}
-		printf("\n");
+	for (size_t i = 0; i < hexbuf->size; ++i) {
+		if (i != 0 && i % 30 == 0)
+			printf("\n");
+		printf("%02x", hexbuf->buf[i]);
 	}
+	printf("\n");
 }
+

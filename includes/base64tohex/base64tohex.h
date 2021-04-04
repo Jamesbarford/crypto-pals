@@ -13,6 +13,7 @@ hexbuf_t *decodeB64(uint8_t *b64, size_t input_len);
 hexbuf_t *decodeB64_linebreaks(uint8_t *b64, size_t input_len);
 hexbuf_t *decodeB64_from_file(char *file_name);
 void print_hexbuf(hexbuf_t *hexbuf);
+void print_hexbuf_oneline(hexbuf_t *hexbuf);
 void free_hex_buf(hexbuf_t *hexbuf);
 
 #endif
